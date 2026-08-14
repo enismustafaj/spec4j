@@ -1,0 +1,47 @@
+on:
+  pull_request:
+    paths: ['action.yml', 'template/**', 'settings.xml', 'examples/**']
+  push:
+    branches: [main]
+    paths: ['action.yml', 'template/**', 'settings.xml', 'examples/**']
+
+# Exercises the action itself (compile -> render pom -> mvn compile -> mvn
+# deploy) against a local file:// "registry" so no real credentials or
+# network target are needed. Run locally with `act` before pushing:
+#   act push -W .github/workflows/test.yml
+# act's default image is missing Maven (real ubuntu-latest ships it), so
+# the mvn steps only run for real on GitHub or with the full-size image:
+#   act push -W .github/workflows/test.yml -P ubuntu-latest=catthehacker/ubuntu:full-latest
+jobs:
+  publish-happy-path:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          spec-path: examples/users/main.tsp
+          version: 0.0.1
+          registry-id: test-repo
+          registry-url: file://${{ github.workspace }}/test-repo
+          registry-token: dummy
+      # artifact-id wasn't set, so this also checks the "derive from
+      # spec's parent folder" default (-> groupId com.jspec, id users).
+      - run: |
+          jar=test-repo/com/jspec/users/0.0.1/users-0.0.1.jar
+          [ -f "$jar" ] || { echo "expected $jar, action did not deploy it"; exit 1; }
+
+  rejects-non-semver-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        id: run
+        continue-on-error: true
+        with:
+          spec-path: examples/users/main.tsp
+          version: not-a-version
+          registry-id: test-repo
+          registry-url: file://${{ github.workspace }}/test-repo
+          registry-token: dummy
+      - run: |
+          [ "${{ steps.run.outcome }}" = "failure" ] || { echo "expected action to reject a non-semver version"; exit 1; }

@@ -38,7 +38,7 @@ runs:
   steps:
     - uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22
 
     - uses: actions/setup-java@v4
       with:
@@ -47,9 +47,12 @@ runs:
 
     - name: Compile spec
       shell: bash
+      # Local install, not -g: tsp resolves "@typespec/*" imports by
+      # walking up node_modules from the spec file, which a global
+      # install is never on the path of.
       run: |
-        npm install -g @typespec/compiler @typespec/http @typespec/rest @typespec/openapi3
-        tsp compile "${{ inputs.spec-path }}"
+        npm install --no-save --no-package-lock @typespec/compiler @typespec/http @typespec/rest @typespec/openapi3
+        npx --no-install tsp compile "${{ inputs.spec-path }}"
 
     - name: Render pom
       shell: bash
@@ -61,9 +64,14 @@ runs:
         version: ${{ inputs.version }}
       run: |
         [ -z "$apiDomain" ] && apiDomain=$(dirname "${{ inputs.spec-path }}" | xargs basename)
-        export apiDomain
         [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must be semver (X.Y.Z), got: $version"; exit 1; }
-        envsubst < "${{ github.action_path }}/template/pom-template.xml" > pom-tmpl.xml
+        sed \
+          -e "s|\${apiDomain}|$apiDomain|g" \
+          -e "s|\${groupId}|$groupId|g" \
+          -e "s|\${registryId}|$registryId|g" \
+          -e "s|\${registryUrl}|$registryUrl|g" \
+          -e "s|\${version}|$version|g" \
+          "${{ github.action_path }}/template/pom-template.xml" > pom-tmpl.xml
 
     - name: Deploy
       shell: bash

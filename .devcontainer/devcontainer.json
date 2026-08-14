@@ -6,9 +6,7 @@
             "installMaven": true
         },
         "ghcr.io/devcontainers/features/node:1": {
-            "version": 21
+            "version": 22
         }
-    },
-
-    "postStartCommand": "npm install -g @typespec/compiler"
+    }
 }
