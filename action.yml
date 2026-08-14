@@ -1,4 +1,4 @@
-name: 'JSPEC'
+name: 'j4spec'
 description: 'Compile TypeSpec API contracts to a Spring Boot interface/DTO jar and publish it to a Maven registry'
 branding:
   icon: 'package'
