@@ -11,9 +11,9 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.jspec</groupId>
+    <groupId>${groupId}</groupId>
     <artifactId>${apiDomain}</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>${version}</version>
     <name>${apiDomain}</name>
     <packaging>jar</packaging>
 
@@ -23,11 +23,11 @@
 
     <distributionManagement>
         <repository>
-            <id>gitlab-maven</id>
-            <url>https://gitlab.com/api/v4/projects/61449533/packages/maven</url>
+            <id>${registryId}</id>
+            <url>${registryUrl}</url>
         </repository>
     </distributionManagement>
-    
+
 
     <dependencies>
         <dependency>

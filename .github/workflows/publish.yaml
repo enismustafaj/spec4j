@@ -1,0 +1,27 @@
+on:
+  push:
+    tags: ['*/v*']
+
+# Tag format: <domain>/vX.Y.Z, e.g. "users/v1.2.0" publishes users/main.tsp
+# as version 1.2.0. Tag it, push it, that's the release.
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: release
+        run: |
+          domain="${GITHUB_REF_NAME%%/*}"
+          version="${GITHUB_REF_NAME#*/v}"
+          [ -f "$domain/main.tsp" ] || { echo "no $domain/main.tsp for tag $GITHUB_REF_NAME"; exit 1; }
+          echo "domain=$domain" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: ./
+        with:
+          spec-path: ${{ steps.release.outputs.domain }}/main.tsp
+          version: ${{ steps.release.outputs.version }}
+          registry-id: gitlab-maven
+          registry-url: https://gitlab.com/api/v4/projects/61449533/packages/maven
+          registry-token: ${{ secrets.GITLAB_TOKEN }}

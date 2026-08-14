@@ -1,0 +1,75 @@
+name: 'JSPEC'
+description: 'Compile TypeSpec API contracts to a Spring Boot interface/DTO jar and publish it to a Maven registry'
+branding:
+  icon: 'package'
+  color: 'blue'
+
+inputs:
+  spec-path:
+    description: 'Path to the .tsp file to compile'
+    required: true
+  group-id:
+    description: 'Maven groupId for the generated package'
+    required: false
+    default: 'com.jspec'
+  artifact-id:
+    description: 'Maven artifactId. Defaults to the spec file''s top-level folder name.'
+    required: false
+    default: ''
+  version:
+    description: 'Maven version to publish, e.g. 1.2.0. No SNAPSHOTs — tag a release to publish one.'
+    required: true
+  registry-id:
+    description: 'Maven <server> id in settings.xml (must match registry-url''s auth)'
+    required: true
+  registry-url:
+    description: 'Maven repository URL to deploy to'
+    required: true
+  registry-token:
+    description: 'Auth token for the registry (sent as Private-Token header)'
+    required: true
+  java-version:
+    description: 'JDK version'
+    required: false
+    default: '21'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: temurin
+
+    - name: Compile spec
+      shell: bash
+      run: |
+        npm install -g @typespec/compiler @typespec/http @typespec/rest @typespec/openapi3
+        tsp compile "${{ inputs.spec-path }}"
+
+    - name: Render pom
+      shell: bash
+      env:
+        apiDomain: ${{ inputs.artifact-id != '' && inputs.artifact-id || '' }}
+        groupId: ${{ inputs.group-id }}
+        registryId: ${{ inputs.registry-id }}
+        registryUrl: ${{ inputs.registry-url }}
+        version: ${{ inputs.version }}
+      run: |
+        [ -z "$apiDomain" ] && apiDomain=$(dirname "${{ inputs.spec-path }}" | xargs basename)
+        export apiDomain
+        [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must be semver (X.Y.Z), got: $version"; exit 1; }
+        envsubst < "${{ github.action_path }}/template/pom-template.xml" > pom-tmpl.xml
+
+    - name: Deploy
+      shell: bash
+      env:
+        token: ${{ inputs.registry-token }}
+        registryId: ${{ inputs.registry-id }}
+      run: |
+        mvn clean compile -f pom-tmpl.xml
+        mvn deploy -s "${{ github.action_path }}/settings.xml" -f pom-tmpl.xml

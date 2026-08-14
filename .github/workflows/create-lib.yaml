@@ -1,64 +1,36 @@
 on:
-    push:
-        branches:
-            - main
+  pull_request:
+    paths: ['**/*.tsp']
+  push:
+    branches: [main]
+    paths: ['**/*.tsp']
 
+# Compile-check only. No publish here — publish happens off release tags,
+# see publish.yaml. This just keeps main from merging a broken spec.
 jobs:
-    get-changed-files:
-        runs-on: ubuntu-latest
-        outputs:
-            all_changed_files: ${{ steps.changed-files-step.outputs.all_changed_files }}
-            any_file_changed: ${{ steps.changed-files-step.outputs.any_changed }}
-        steps:
-            - uses: actions/checkout@v4
-            - name: Get changed files
-              id: changed-files-step
-              uses: tj-actions/changed-files@v44
-              with:
-                files: '**/*.tsp'
+  changed-specs:
+    runs-on: ubuntu-latest
+    outputs:
+      files: ${{ steps.changed.outputs.all_changed_files }}
+      any: ${{ steps.changed.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: changed
+        uses: tj-actions/changed-files@v44
+        with:
+          files: '**/*.tsp'
 
-    trigger-package-generation:
-        needs: [get-changed-files]
-        runs-on: ubuntu-latest
-        if: needs.get-changed-files.outputs.any_file_changed == 'true'
-        steps:
-            - uses: actions/checkout@v4
-            - name: print-files
-              env:
-                ALL_CHANGED_FILES: ${{ needs.get-changed-files.outputs.all_changed_files }}
-              run: |
-                for file in ${ALL_CHANGED_FILES}; do
-                    echo "$file was changed"
-                done
-            - name: install
-              uses: actions/setup-node@v4
-              with:
-                node-version: 20
-                cache: 'npm'
-                cache-dependency-path: ${{github.workspace}}/package-lock.json
-            - run: npm ci
-            - name: Set up JDK
-              uses: actions/setup-java@v4
-              with:
-                java-version: '21'
-                distribution: 'temurin'
-            - name: Generate code and package
-              env:
-                ALL_CHANGED_FILES: ${{ needs.get-changed-files.outputs.all_changed_files }}
-                token: ${{secrets.GITLAB_TOKEN}}
-              run: |
-                npm install -g @typespec/compiler
-                
-                for file in ${ALL_CHANGED_FILES}; do
-                    tsp compile $file
-                    content=$(<./template/pom-template.xml)
-
-                    apiDomain=$(echo $file | sed -n 's|\([^/]*\)/.*|\1|p')
-                    export apiDomain
-
-                    echo $content | envsubst > "pom-tmpl.xml"
-
-                    mvn clean compile -f "pom-tmpl.xml"
-                    
-                    mvn deploy -s settings.xml -f pom-tmpl.xml
-                done
+  validate:
+    needs: changed-specs
+    if: needs.changed-specs.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        spec: ${{ fromJson(needs.changed-specs.outputs.files) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install -g @typespec/compiler @typespec/http @typespec/rest @typespec/openapi3
+      - run: tsp compile "${{ matrix.spec }}"

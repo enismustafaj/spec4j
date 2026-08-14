@@ -5,7 +5,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <servers>
         <server>
-            <id>gitlab-maven</id>
+            <id>${env.registryId}</id>
             <configuration>
                 <httpHeaders>
                     <property>
