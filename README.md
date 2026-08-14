@@ -1,5 +1,7 @@
 ## About
 
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-spec4j-blue?logo=github)](https://github.com/marketplace/actions/spec4j)
+
 spec4j is a GitHub Action that turns a [TypeSpec](https://typespec.io/) API contract into a versioned Java library: it compiles the `.tsp` file to OpenAPI, generates Spring Boot REST interfaces and DTOs from it, packages them as a Maven jar, and deploys that jar to a Maven registry.
 
 The idea: define an API's shape once, in one contract repo, and let every service that implements or calls it depend on the generated library instead of hand-writing (and drifting from) its own interfaces.
@@ -36,7 +38,7 @@ jobs:
         run: |
           echo "domain=${GITHUB_REF_NAME%%/*}" >> "$GITHUB_OUTPUT"
           echo "version=${GITHUB_REF_NAME#*/v}" >> "$GITHUB_OUTPUT"
-      - uses: <org>/spec4j@v1
+      - uses: enismustafaj/spec4j@1.0.1
         with:
           spec-path: ${{ steps.release.outputs.domain }}/main.tsp
           version: ${{ steps.release.outputs.version }}
