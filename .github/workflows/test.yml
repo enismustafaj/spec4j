@@ -25,9 +25,9 @@ jobs:
           registry-url: file://${{ github.workspace }}/test-repo
           registry-token: dummy
       # artifact-id wasn't set, so this also checks the "derive from
-      # spec's parent folder" default (-> groupId com.jspec, id users).
+      # spec's parent folder" default (-> groupId com.spec4j, id users).
       - run: |
-          jar=test-repo/com/jspec/users/0.0.1/users-0.0.1.jar
+          jar=test-repo/com/spec4j/users/0.0.1/users-0.0.1.jar
           [ -f "$jar" ] || { echo "expected $jar, action did not deploy it"; exit 1; }
 
   rejects-non-semver-version:

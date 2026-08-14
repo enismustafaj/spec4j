@@ -87,8 +87,8 @@
                             <generateSupportingFiles>false</generateSupportingFiles>
 
                             <configOptions>
-                                <apiPackage>com.jspec.codegen.api</apiPackage>
-                                <modelPackage>com.jspec.codegen.model</modelPackage>
+                                <apiPackage>com.spec4j.codegen.api</apiPackage>
+                                <modelPackage>com.spec4j.codegen.model</modelPackage>
                                 <interfaceOnly>true</interfaceOnly>
                                 <skipDefaultInterface>true</skipDefaultInterface>
                                 <openApiNullable>true</openApiNullable>

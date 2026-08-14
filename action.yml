@@ -1,4 +1,4 @@
-name: 'j4spec'
+name: 'spec4j'
 description: 'Compile TypeSpec API contracts to a Spring Boot interface/DTO jar and publish it to a Maven registry'
 branding:
   icon: 'package'
@@ -11,7 +11,7 @@ inputs:
   group-id:
     description: 'Maven groupId for the generated package'
     required: false
-    default: 'com.jspec'
+    default: 'com.spec4j'
   artifact-id:
     description: 'Maven artifactId. Defaults to the spec file''s top-level folder name.'
     required: false

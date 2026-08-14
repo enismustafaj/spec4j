@@ -1,6 +1,6 @@
 ## About
 
-JSPEC is a GitHub Action that turns a [TypeSpec](https://typespec.io/) API contract into a versioned Java library: it compiles the `.tsp` file to OpenAPI, generates Spring Boot REST interfaces and DTOs from it, packages them as a Maven jar, and deploys that jar to a Maven registry.
+spec4j is a GitHub Action that turns a [TypeSpec](https://typespec.io/) API contract into a versioned Java library: it compiles the `.tsp` file to OpenAPI, generates Spring Boot REST interfaces and DTOs from it, packages them as a Maven jar, and deploys that jar to a Maven registry.
 
 The idea: define an API's shape once, in one contract repo, and let every service that implements or calls it depend on the generated library instead of hand-writing (and drifting from) its own interfaces.
 
@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "domain=${GITHUB_REF_NAME%%/*}" >> "$GITHUB_OUTPUT"
           echo "version=${GITHUB_REF_NAME#*/v}" >> "$GITHUB_OUTPUT"
-      - uses: <org>/jspec@v1
+      - uses: <org>/spec4j@v1
         with:
           spec-path: ${{ steps.release.outputs.domain }}/main.tsp
           version: ${{ steps.release.outputs.version }}
@@ -52,7 +52,7 @@ git tag users/v1.2.0
 git push origin users/v1.2.0
 ```
 
-That publishes `com.jspec:users:1.2.0` (or whatever `group-id`/`artifact-id` you set) to the registry. There's no floating SNAPSHOT — a version only gets published when it's tagged, and `version` must be a plain `X.Y.Z` semver string.
+That publishes `com.spec4j:users:1.2.0` (or whatever `group-id`/`artifact-id` you set) to the registry. There's no floating SNAPSHOT — a version only gets published when it's tagged, and `version` must be a plain `X.Y.Z` semver string.
 
 ### Inputs
 
@@ -63,7 +63,7 @@ That publishes `com.jspec:users:1.2.0` (or whatever `group-id`/`artifact-id` you
 | `registry-id` | yes | — | Maven `<server>` id (must match the registry's auth config) |
 | `registry-url` | yes | — | Maven repository URL to deploy to |
 | `registry-token` | yes | — | Registry auth token, sent as a `Private-Token` header |
-| `group-id` | no | `com.jspec` | Maven groupId for the generated package |
+| `group-id` | no | `com.spec4j` | Maven groupId for the generated package |
 | `artifact-id` | no | spec's parent folder name | Maven artifactId |
 | `java-version` | no | `21` | JDK version used to compile/deploy |
 
@@ -71,7 +71,7 @@ Under the hood the action installs the TypeSpec compiler, runs `tsp compile`, re
 
 ## Local development
 
-This repo includes a devcontainer spec (Node 21, Java 21, Maven) if you want to hack on the action itself without installing those locally.
+This repo includes a devcontainer spec (Node 22, Java 21, Maven) if you want to hack on the action itself without installing those locally.
 
 ## Potential Improvements
 - Multi-language codegen targets (TypeScript/Python clients), not just Spring
