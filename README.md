@@ -38,14 +38,16 @@ jobs:
         run: |
           echo "domain=${GITHUB_REF_NAME%%/*}" >> "$GITHUB_OUTPUT"
           echo "version=${GITHUB_REF_NAME#*/v}" >> "$GITHUB_OUTPUT"
-      - uses: enismustafaj/spec4j@1.0.1
+      - uses: enismustafaj/spec4j@1.0.3
         with:
           spec-path: ${{ steps.release.outputs.domain }}/main.tsp
           version: ${{ steps.release.outputs.version }}
           registry-id: gitlab-maven
-          registry-url: https://gitlab.com/api/v4/projects/<id>/packages/maven
+          registry-url: https://gitlab.com/api/v4/projects/<numeric-id>/packages/maven
           registry-token: ${{ secrets.GITLAB_TOKEN }}
 ```
+
+> **For GitLab, use the numeric project ID in `registry-url`, not the `namespace%2Fproject` URL-encoded path.** Both work with plain `curl`, but Maven's HTTP client mishandles the encoded slash and GitLab rejects the resulting request with a 400. Find the numeric ID on the project's main page or **Settings → General**.
 
 Cutting a release is then just a tag:
 

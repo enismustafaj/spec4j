@@ -80,9 +80,4 @@ runs:
         registryId: ${{ inputs.registry-id }}
       run: |
         mvn clean compile -f pom-tmpl.xml
-        # ponytail: Maven 3.9+'s default HTTP transport sends "Expect:
-        # 100-continue", which Cloudflare-fronted registries (e.g.
-        # gitlab.com) can 400 on for small uploads. Disabling it is the
-        # documented workaround; revisit if a registry needs it back.
-        mvn deploy -s "${{ github.action_path }}/settings.xml" -f pom-tmpl.xml \
-          -Dhttp.expectContinue=false -Dmaven.wagon.http.pool=false
+        mvn deploy -s "${{ github.action_path }}/settings.xml" -f pom-tmpl.xml
